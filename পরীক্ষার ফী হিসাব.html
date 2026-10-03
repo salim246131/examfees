@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>পরীক্ষার ফী হিসাব</title>
+<style>
+:root{--g:#0f766e;--g2:#115e59;--bg:#f3f6f5;--card:#fff;--tx:#1b2a28;--mut:#64748b;--bd:#d6e0de;--red:#b91c1c;--amb:#b45309}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Noto Sans Bengali","Kalpurush","SolaimanLipi","Vrinda","Nirmala UI",system-ui,sans-serif;font-size:16px;line-height:1.5}
+header.top{background:var(--g);color:#fff;text-align:center;padding:14px 12px}
+header.top h1{margin:0;font-size:20px;line-height:1.4}
+.wrap{max-width:900px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+select,input[type=text],input[type=date]{width:100%;padding:11px 12px;font:inherit;border:1px solid var(--bd);border-radius:8px;background:#fff;color:var(--tx)}
+select:focus,input:focus{outline:2px solid var(--g);border-color:var(--g)}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:11px 16px;background:var(--g);color:#fff}
+button:hover{background:var(--g2)}
+button.sec{background:#e2ece9;color:var(--g2)}
+button.sec:hover{background:#d3e3df}
+button.danger{background:#fee2e2;color:var(--red)}
+button.sm{padding:5px 10px;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 180px}
+.badge{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.badge b{font-size:18px;color:var(--g2)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center}
+.stat small{display:block;color:var(--mut);font-size:13px}
+.stat strong{font-size:19px}
+.stat.in strong{color:var(--g)}.stat.out strong{color:var(--red)}.stat.bal strong{color:var(--amb)}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+nav.tabs button{flex:1 0 auto;background:#e2ece9;color:var(--g2);white-space:nowrap}
+nav.tabs button.on{background:var(--g);color:#fff}
+.view{display:none}.view.on{display:block}
+.modes{display:flex;gap:8px;margin-top:4px}
+.modes label{flex:1;margin:0;display:flex;align-items:center;gap:6px;padding:10px;border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:15px;cursor:pointer}
+.modes input{margin:0}
+.fee{color:var(--g2);font-size:14px;margin-top:4px;min-height:21px}
+.grp{margin-bottom:14px;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.grp h3{margin:0;padding:8px 12px;background:#e8f1ef;font-size:16px;display:flex;justify-content:space-between;gap:8px}
+.grp h3 small{font-weight:400;color:var(--mut);font-size:14px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:7px 10px;border-top:1px solid var(--bd);text-align:left;font-size:15px;vertical-align:top}
+th{background:#f7faf9;font-size:13px;color:var(--mut)}
+td.n,th.n{text-align:right;white-space:nowrap}
+.sub{font-size:13px;color:var(--mut);margin-top:2px}
+.tot{display:flex;justify-content:space-between;gap:8px;padding:12px;background:var(--g);color:#fff;border-radius:10px;font-weight:700;font-size:18px}
+.sumbox{border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-top:6px}
+.sumbox div{display:flex;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--bd);font-size:17px}
+.sumbox div:first-child{border-top:0}
+.sumbox .sb-bal{background:var(--g);color:#fff;font-weight:700}
+.empty{text-align:center;color:var(--mut);padding:24px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.toolbar h2{margin:0;font-size:18px}
+.hint{font-size:13px;color:var(--mut);margin:0 0 10px}
+.frow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--bd)}
+.frow:first-child{border-top:0}
+.frow{flex-wrap:wrap}
+.frow .fn{flex:1 1 130px;min-width:0}
+.frow .ff{width:84px;text-align:right}
+button:disabled{opacity:.4;cursor:default}
+#printMeta{display:none;text-align:center;margin-bottom:10px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#14532d;color:#fff;padding:10px 18px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+footer{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:6px 0 24px}
+footer input{display:none}
+@media (max-width:480px){.stat strong{font-size:16px}th,td{padding:6px}}
+@page{size:A4;margin:12mm}
+@media print{
+  body{background:#fff;color:#000;font-size:13px}
+  header.top{background:#fff;color:#000;border-bottom:2px solid #000;padding:4px 0 8px}
+  header.top h1{font-size:18px}
+  .noprint,nav.tabs,.cards,#setup,footer,#toast,.hint,.toolbar{display:none!important}
+  .wrap{max-width:none;padding:0}
+  #printMeta{display:block;font-size:15px;margin:8px 0 12px;line-height:1.6}
+  .card{border:0;padding:0;margin:0}
+  .grp{break-inside:avoid;border:1px solid #000;margin-bottom:10px}
+  .grp h3{background:#eee;color:#000}
+  .grp h3 small,.sub{color:#333}
+  thead{display:table-header-group}
+  tr{break-inside:avoid}
+  th{background:#f0f0f0;color:#000}
+  th,td{border-color:#999;font-size:12.5px}
+  .tot{background:#fff;color:#000;border:2px solid #000}
+  .sumbox{border-color:#000}
+  .sumbox div{border-color:#999}
+  .sumbox .sb-bal{background:#fff;color:#000;border-top:2px solid #000}
+}
+</style>
+</head>
+<body>
+<header class="top"><h1>আল জামিয়াতুল ইসলামিয়া তারাইল ফুকরা মাদরাসা, কাশিয়ানী, গোপালগঞ্জ।</h1></header>
+
+<div class="wrap">
+  <!-- পরীক্ষা ও সাল নির্বাচন -->
+  <div class="card" id="setup"></div>
+
+  <div id="main">
+    <div class="cards">
+      <div class="stat in"><small>মোট জমা</small><strong id="sIn">০</strong></div>
+      <div class="stat out"><small>মোট খরচ</small><strong id="sOut">০</strong></div>
+      <div class="stat bal"><small>অবশিষ্ট</small><strong id="sBal">০</strong></div>
+    </div>
+
+    <nav class="tabs">
+      <button data-t="dep" class="on">জমা নিন</button>
+      <button data-t="exp">খরচ লিখুন</button>
+      <button data-t="depList">জমার তালিকা</button>
+      <button data-t="expList">খরচের তালিকা</button>
+      <button data-t="summary">সারসংক্ষেপ</button>
+      <button data-t="search">খুঁজুন</button>
+      <button data-t="fees">জামাত ও ফী</button>
+    </nav>
+
+    <div id="printMeta"></div>
+
+    <!-- জমা ফর্ম -->
+    <section class="view on card" id="v-dep">
+      <h2 id="depTitle" style="margin:0 0 4px;font-size:18px">ফী জমা</h2>
+      <label for="dDate">তারিখ</label>
+      <input type="date" id="dDate">
+      <label for="dJamat">জামাত</label>
+      <select id="dJamat"></select>
+      <div class="fee" id="dFee"></div>
+      <label>জমার ধরন</label>
+      <div class="modes">
+        <label><input type="radio" name="mode" value="single" checked> একজন ছাত্র</label>
+        <label><input type="radio" name="mode" value="group"> একসাথে অনেকে</label>
+      </div>
+      <div id="nameBox">
+        <label for="dName">ছাত্রের নাম</label>
+        <input type="text" id="dName" autocomplete="off" placeholder="ছাত্রের নাম লিখুন">
+      </div>
+      <div id="countBox" style="display:none">
+        <label for="dCount">কতজনের টাকা নিলাম</label>
+        <input type="text" id="dCount" inputmode="numeric" autocomplete="off" placeholder="ছাত্রসংখ্যা">
+      </div>
+      <label for="dAmt">টাকার পরিমাণ</label>
+      <input type="text" id="dAmt" inputmode="numeric" autocomplete="off" placeholder="টাকা">
+      <label for="dNote">নোট (কে দিলো, কীভাবে দিলো — ইচ্ছা হলে)</label>
+      <input type="text" id="dNote" autocomplete="off" placeholder="যেমন: অভিভাবক নিজে এসে নগদ দিয়েছেন">
+      <div class="row" style="margin-top:14px">
+        <button id="dSave">জমা করুন</button>
+        <button id="dCancel" class="sec" style="display:none">বাতিল</button>
+      </div>
+    </section>
+
+    <!-- খরচ ফর্ম -->
+    <section class="view card" id="v-exp">
+      <h2 id="expTitle" style="margin:0 0 4px;font-size:18px">খরচ</h2>
+      <label for="eDate">তারিখ</label>
+      <input type="date" id="eDate">
+      <label for="eKhat">খাত</label>
+      <input type="text" id="eKhat" list="khatList" autocomplete="off" placeholder="যেমন: খাতা-কলম">
+      <datalist id="khatList"></datalist>
+      <label for="eAmt">টাকার পরিমাণ</label>
+      <input type="text" id="eAmt" inputmode="numeric" autocomplete="off" placeholder="টাকা">
+      <label for="eNote">বিবরণ (ইচ্ছা হলে)</label>
+      <input type="text" id="eNote" autocomplete="off">
+      <div class="row" style="margin-top:14px">
+        <button id="eSave">খরচ সংরক্ষণ</button>
+        <button id="eCancel" class="sec" style="display:none">বাতিল</button>
+      </div>
+    </section>
+
+    <!-- জমার তালিকা -->
+    <section class="view card" id="v-depList">
+      <div class="toolbar"><h2>জমার তালিকা (জামাত অনুযায়ী)</h2><button class="sec noprint" onclick="pdfSave()">PDF নামান</button></div>
+      <p class="hint noprint">বাটন চাপলে প্রিন্ট বক্স খুলবে। সেখানে "Save as PDF" বা "PDF হিসেবে সংরক্ষণ করুন" বেছে নিলে PDF নামবে।</p>
+      <div id="depListBody"></div>
+    </section>
+
+    <!-- খরচের তালিকা -->
+    <section class="view card" id="v-expList">
+      <div class="toolbar"><h2>খরচের তালিকা (খাত অনুযায়ী)</h2><button class="sec noprint" onclick="pdfSave()">PDF নামান</button></div>
+      <p class="hint noprint">বাটন চাপলে প্রিন্ট বক্স খুলবে। সেখানে "Save as PDF" বা "PDF হিসেবে সংরক্ষণ করুন" বেছে নিলে PDF নামবে।</p>
+      <div id="expListBody"></div>
+    </section>
+
+    <!-- সারসংক্ষেপ -->
+    <section class="view card" id="v-summary">
+      <div class="toolbar"><h2>জমা-খরচের সারসংক্ষেপ</h2><button class="sec noprint" onclick="pdfSave()">PDF নামান</button></div>
+      <p class="hint noprint">বাটন চাপলে প্রিন্ট বক্স খুলবে। সেখানে "Save as PDF" বা "PDF হিসেবে সংরক্ষণ করুন" বেছে নিলে PDF নামবে।</p>
+      <div id="summaryBody"></div>
+    </section>
+
+    <!-- খুঁজুন -->
+    <section class="view card" id="v-search">
+      <h2 style="margin:0 0 4px;font-size:18px">ছাত্র খুঁজুন</h2>
+      <p class="hint">সব পরীক্ষা ও সালের জমা থেকে খোঁজা হবে।</p>
+      <input type="text" id="qIn" autocomplete="off" placeholder="ছাত্রের নাম বা নোটের কিছু অংশ লিখুন">
+      <div id="searchBody" style="margin-top:12px"></div>
+    </section>
+
+    <!-- ফী নির্ধারণ -->
+    <section class="view card" id="v-fees">
+      <h2 style="margin:0 0 4px;font-size:18px">জামাত ও ফী</h2>
+      <p class="hint">নাম বা ফী বদলে "সংরক্ষণ" চাপুন। নতুন ফী শুধু নতুন জমার ক্ষেত্রে বসবে। নাম বদলালে আগের এন্ট্রিতেও নতুন নাম দেখাবে। যে জামাতে জমা আছে সেটা মোছা যাবে না।</p>
+      <div id="feeRows"></div>
+      <button id="feeSave" style="margin-top:12px;width:100%">সংরক্ষণ</button>
+      <h3 style="margin:20px 0 4px;font-size:16px">নতুন জামাত যোগ</h3>
+      <div class="row">
+        <input type="text" id="nJamat" autocomplete="off" placeholder="জামাতের নাম">
+        <input type="text" id="nFee" inputmode="numeric" autocomplete="off" placeholder="ফী (টাকা)">
+      </div>
+      <button id="nAdd" style="margin-top:10px;width:100%">যোগ করুন</button>
+    </section>
+  </div>
+
+  <footer>
+    <button class="sec" id="bkExport">ব্যাকআপ নামান</button>
+    <button class="sec" id="bkImportBtn">ব্যাকআপ আনুন</button>
+    <input type="file" id="bkFile" accept=".json,application/json">
+  </footer>
+</div>
+<div id="toast"></div>
+
+<script>
+const EXAMS=["১ম সাময়িক পরীক্ষা","২য় সাময়িক পরীক্ষা","বার্ষিক পরীক্ষা","মাসিক পরীক্ষা","মডেল টেস্ট পরীক্ষা"];
+const JAMATS0=[["ইফতা",500],["দাওরা",500],["জালালাইন",450],["শরহে বেকায়া",400],["কাফিয়া",400],["হেদায়াতুন্নাহু",400],["নাহবেমীর",350],["মাদানী- ২য়",300],["মাদানী- ১ম",300],["মিযান",300],["খুসুসী",300],["হেফজ (ক)",250],["হেফজ (খ)",200],["কিরাতখানা",200]];
+const LS="parikshaFeeHisab_v1";
+
+const $=id=>document.getElementById(id);
+const bn=s=>String(s).replace(/\d/g,d=>"০১২৩৪৫৬৭৮৯"[d]);
+const en=s=>String(s).replace(/[০-৯]/g,d=>"০১২৩৪৫৬৭৮৯".indexOf(d));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>bn((Math.round(n*100)/100).toLocaleString("en-US"));
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fmtDate=iso=>{const p=(iso||"").split("-");return p.length===3?bn(p[2]+"/"+p[1]+"/"+p[0]):""};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const parseAmt=v=>{const n=Number(en(v).replace(/[,\s]/g,""));return isFinite(n)&&n>0?n:0};
+const parseCount=v=>{const n=parseInt(en(v).replace(/[,\s]/g,""),10);return isFinite(n)&&n>0?n:0};
+const DASH="<span style='color:var(--mut)'>—</span>";
+
+let S=load();
+let editing=null; // {t:'dep'|'exp', id}
+let tab="dep";
+
+function migrate(r){
+  if(!Array.isArray(r.jamats)||!r.jamats.length){
+    r.jamats=JAMATS0.map(([name,fee])=>({name,fee:(r.fees&&r.fees[name])||fee}));
+  }
+  delete r.fees;
+  return r;
+}
+function load(){
+  try{
+    const r=JSON.parse(localStorage.getItem(LS));
+    if(r&&r.sel&&r.data)return migrate(r);
+  }catch(e){}
+  return migrate({sel:{exam:"",year:new Date().getFullYear(),done:false},data:{}});
+}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){toast("সংরক্ষণ করা যায়নি — ব্রাউজারে জায়গা নেই বা প্রাইভেট মোড")}}
+const key=()=>S.sel.exam+"|"+S.sel.year;
+function cur(){if(!S.data[key()])S.data[key()]={deposits:[],expenses:[]};return S.data[key()]}
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("show"),1800)}
+const feeOf=j=>{const f=S.jamats.find(x=>x.name===j);return f?f.fee:0};
+const cnt=x=>x.group?(x.count||0):1;
+
+/* ---------- সেটআপ ---------- */
+function renderSetup(){
+  const box=$("setup");
+  if(S.sel.done&&S.sel.exam){
+    box.innerHTML=`<div class="badge"><div><small style="color:var(--mut)">চলমান পরীক্ষা</small><br><b>${esc(S.sel.exam)} — ${bn(S.sel.year)}</b></div><button class="sec sm" id="chg">পরিবর্তন</button></div>`;
+    $("chg").onclick=()=>{S.sel.done=false;save();renderAll()};
+  }else{
+    const y0=new Date().getFullYear();
+    let ys="";for(let y=y0-3;y<=y0+5;y++)ys+=`<option value="${y}" ${y==S.sel.year?"selected":""}>${bn(y)}</option>`;
+    box.innerHTML=`<div class="row"><div><label for="sExam" style="margin-top:0">পরীক্ষা</label><select id="sExam"><option value="">— পরীক্ষা নির্বাচন করুন —</option>${EXAMS.map(e=>`<option ${e==S.sel.exam?"selected":""}>${e}</option>`).join("")}</select></div><div><label for="sYear" style="margin-top:0">সাল</label><select id="sYear">${ys}</select></div></div><button id="sOk" style="margin-top:12px;width:100%">শুরু করুন</button>`;
+    $("sOk").onclick=()=>{
+      const e=$("sExam").value;if(!e){toast("পরীক্ষা নির্বাচন করুন");return}
+      S.sel.exam=e;S.sel.year=Number($("sYear").value);S.sel.done=true;save();cancelEdit();renderAll();
+    };
+  }
+}
+
+/* ---------- সারসংক্ষেপ কার্ড ---------- */
+function totals(){
+  const c=cur();
+  const i=c.deposits.reduce((a,x)=>a+x.amount,0),o=c.expenses.reduce((a,x)=>a+x.amount,0);
+  return {i,o};
+}
+function renderStats(){
+  const {i,o}=totals();
+  $("sIn").textContent=money(i);$("sOut").textContent=money(o);$("sBal").textContent=money(i-o);
+}
+
+/* ---------- জমা ফর্ম ---------- */
+function initJamatSelect(){
+  const v=$("dJamat").value;
+  $("dJamat").innerHTML=`<option value="">— জামাত নির্বাচন করুন —</option>`+S.jamats.map(({name:n,fee})=>`<option value="${esc(n)}">${esc(n)} — ${bn(fee)} টাকা</option>`).join("");
+  $("dJamat").value=v;
+}
+const mode=()=>document.querySelector("input[name=mode]:checked").value;
+function syncDepForm(auto){
+  const j=$("dJamat").value,m=mode(),n=parseCount($("dCount").value);
+  $("nameBox").style.display=m==="single"?"block":"none";
+  $("countBox").style.display=m==="group"?"block":"none";
+  let t="";
+  if(j){
+    t=`এই জামাতের নির্ধারিত ফী: ${bn(feeOf(j))} টাকা`;
+    if(m==="group"&&n>0)t+=` — ${bn(n)} × ${bn(feeOf(j))} = ${money(n*feeOf(j))} টাকা`;
+  }
+  $("dFee").textContent=t;
+  if(auto){
+    $("dAmt").value=!j?"":(m==="single"?bn(feeOf(j)):(n>0?bn(n*feeOf(j)):""));
+  }
+  $("dAmt").placeholder=m==="group"?"টাকা (ছাত্রসংখ্যা দিলে নিজে বসবে)":"টাকা";
+}
+function saveDeposit(){
+  const jamat=$("dJamat").value,m=mode(),amount=parseAmt($("dAmt").value),count=parseCount($("dCount").value);
+  if(!jamat){toast("জামাত নির্বাচন করুন");return}
+  if(m==="group"&&!count){toast("কতজনের টাকা নিলেন তা লিখুন");return}
+  if(!amount){toast("সঠিক টাকার পরিমাণ লিখুন");return}
+  const rec={id:editing&&editing.t==="dep"?editing.id:uid(),date:$("dDate").value||today(),jamat,group:m==="group",count:m==="group"?count:1,name:m==="single"?$("dName").value.trim():"",amount,note:$("dNote").value.trim()};
+  const arr=cur().deposits;
+  if(editing&&editing.t==="dep"){const k=arr.findIndex(x=>x.id===editing.id);if(k>=0)arr[k]=rec;toast("হালনাগাদ হয়েছে");cancelEdit()}
+  else{
+    arr.push(rec);toast("জমা হয়েছে");
+    $("dName").value="";$("dCount").value="";$("dNote").value="";
+    syncDepForm(true);
+    (m==="single"?$("dName"):$("dCount")).focus();
+  }
+  save();refreshViews();
+}
+
+/* ---------- খরচ ফর্ম ---------- */
+function saveExpense(){
+  const khat=$("eKhat").value.trim(),amount=parseAmt($("eAmt").value);
+  if(!khat){toast("খাতের নাম লিখুন");return}
+  if(!amount){toast("সঠিক টাকার পরিমাণ লিখুন");return}
+  const rec={id:editing&&editing.t==="exp"?editing.id:uid(),date:$("eDate").value||today(),khat,amount,note:$("eNote").value.trim()};
+  const arr=cur().expenses;
+  if(editing&&editing.t==="exp"){const k=arr.findIndex(x=>x.id===editing.id);if(k>=0)arr[k]=rec;toast("হালনাগাদ হয়েছে");cancelEdit()}
+  else{arr.push(rec);toast("খরচ লেখা হয়েছে");$("eKhat").value="";$("eAmt").value="";$("eNote").value="";$("eKhat").focus()}
+  save();refreshViews();
+}
+function renderKhatList(){
+  const set=[...new Set(Object.values(S.data).flatMap(d=>d.expenses.map(x=>x.khat)))];
+  $("khatList").innerHTML=set.map(k=>`<option value="${esc(k)}">`).join("");
+}
+
+/* ---------- সম্পাদনা / মুছা ---------- */
+function cancelEdit(){
+  editing=null;
+  $("depTitle").textContent="ফী জমা";$("expTitle").textContent="খরচ";
+  $("dSave").textContent="জমা করুন";$("eSave").textContent="খরচ সংরক্ষণ";
+  $("dCancel").style.display=$("eCancel").style.display="none";
+  $("dName").value="";$("dCount").value="";$("dNote").value="";$("eKhat").value="";$("eAmt").value="";$("eNote").value="";
+  $("dDate").value=$("eDate").value=today();
+  document.querySelector("input[name=mode][value=single]").checked=true;
+  syncDepForm(true);
+}
+function editDep(id){
+  const r=cur().deposits.find(x=>x.id===id);if(!r)return;
+  editing={t:"dep",id};
+  $("dDate").value=r.date;$("dJamat").value=r.jamat;
+  document.querySelector(`input[name=mode][value=${r.group?"group":"single"}]`).checked=true;
+  $("dCount").value=r.group&&r.count?bn(r.count):"";
+  syncDepForm(false);
+  $("dName").value=r.name||"";$("dNote").value=r.note||"";$("dAmt").value=bn(r.amount);
+  $("depTitle").textContent="জমা সংশোধন";$("dSave").textContent="হালনাগাদ করুন";$("dCancel").style.display="block";
+  showTab("dep");window.scrollTo(0,0);
+}
+function editExp(id){
+  const r=cur().expenses.find(x=>x.id===id);if(!r)return;
+  editing={t:"exp",id};
+  $("eDate").value=r.date;$("eKhat").value=r.khat;$("eAmt").value=bn(r.amount);$("eNote").value=r.note||"";
+  $("expTitle").textContent="খরচ সংশোধন";$("eSave").textContent="হালনাগাদ করুন";$("eCancel").style.display="block";
+  showTab("exp");window.scrollTo(0,0);
+}
+function delRec(t,id){
+  if(!confirm("এই এন্ট্রি মুছে ফেলবেন?"))return;
+  const c=cur();
+  if(t==="dep")c.deposits=c.deposits.filter(x=>x.id!==id);else c.expenses=c.expenses.filter(x=>x.id!==id);
+  if(editing&&editing.id===id)cancelEdit();
+  save();refreshViews();
+}
+
+/* ---------- তালিকা ---------- */
+function btns(t,id){return `<td class="n noprint"><button class="sec sm" onclick="${t==="dep"?"editDep":"editExp"}('${id}')">সম্পাদনা</button> <button class="danger sm" onclick="delRec('${t}','${id}')">মুছুন</button></td>`}
+function depWho(x){
+  const main=x.group?`<i>একসাথে জমা${x.count?" ("+bn(x.count)+" জন)":""}</i>`:(x.name?esc(x.name):DASH);
+  return main+(x.note?`<div class="sub">${esc(x.note)}</div>`:"");
+}
+function renderLists(){
+  const c=cur();
+  // জমা: জামাত অনুযায়ী
+  let h="",total=0,totalCnt=0;
+  S.jamats.forEach(({name:jn})=>{
+    const rows=c.deposits.filter(x=>x.jamat===jn).sort((a,b)=>a.date.localeCompare(b.date));
+    if(!rows.length)return;
+    const sub=rows.reduce((a,x)=>a+x.amount,0),sc=rows.reduce((a,x)=>a+cnt(x),0);total+=sub;totalCnt+=sc;
+    h+=`<div class="grp"><h3><span>${esc(jn)} <small>· ${bn(sc)} জন</small></span><span>${money(sub)} টাকা</span></h3><table><thead><tr><th>#</th><th>তারিখ</th><th>ছাত্র / বিবরণ</th><th class="n">টাকা</th><th class="noprint"></th></tr></thead><tbody>`+
+      rows.map((x,k)=>`<tr><td>${bn(k+1)}</td><td>${fmtDate(x.date)}</td><td>${depWho(x)}</td><td class="n">${money(x.amount)}</td>${btns("dep",x.id)}</tr>`).join("")+`</tbody></table></div>`;
+  });
+  $("depListBody").innerHTML=h?h+`<div class="tot"><span>সর্বমোট জমা (${bn(totalCnt)} জন)</span><span>${money(total)} টাকা</span></div>`:`<div class="empty">এখনো কোনো জমা নেই</div>`;
+
+  // খরচ: খাত অনুযায়ী
+  const khats=[...new Set(c.expenses.map(x=>x.khat))];
+  let e="",et=0;
+  khats.forEach(k=>{
+    const rows=c.expenses.filter(x=>x.khat===k).sort((a,b)=>a.date.localeCompare(b.date));
+    const sub=rows.reduce((a,x)=>a+x.amount,0);et+=sub;
+    e+=`<div class="grp"><h3><span>${esc(k)}</span><span>${money(sub)} টাকা</span></h3><table><thead><tr><th>#</th><th>তারিখ</th><th>বিবরণ</th><th class="n">টাকা</th><th class="noprint"></th></tr></thead><tbody>`+
+      rows.map((x,i)=>`<tr><td>${bn(i+1)}</td><td>${fmtDate(x.date)}</td><td>${x.note?esc(x.note):DASH}</td><td class="n">${money(x.amount)}</td>${btns("exp",x.id)}</tr>`).join("")+`</tbody></table></div>`;
+  });
+  $("expListBody").innerHTML=e?e+`<div class="tot"><span>সর্বমোট খরচ</span><span>${money(et)} টাকা</span></div>`:`<div class="empty">এখনো কোনো খরচ নেই</div>`;
+}
+
+/* ---------- সারসংক্ষেপ ---------- */
+function renderSummary(){
+  const c=cur();
+  let rows="",tc=0,ta=0;
+  S.jamats.forEach(({name:jn})=>{
+    const ds=c.deposits.filter(x=>x.jamat===jn);if(!ds.length)return;
+    const n=ds.reduce((a,x)=>a+cnt(x),0),a=ds.reduce((s,x)=>s+x.amount,0);tc+=n;ta+=a;
+    rows+=`<tr><td>${esc(jn)}</td><td class="n">${bn(n)} জন</td><td class="n">${money(a)}</td></tr>`;
+  });
+  const dep=rows?`<div class="grp"><h3><span>জমা — জামাত অনুযায়ী</span></h3><table><thead><tr><th>জামাত</th><th class="n">ছাত্রসংখ্যা</th><th class="n">টাকা</th></tr></thead><tbody>${rows}<tr style="font-weight:700"><td>মোট</td><td class="n">${bn(tc)} জন</td><td class="n">${money(ta)}</td></tr></tbody></table></div>`:`<div class="empty">এখনো কোনো জমা নেই</div>`;
+
+  const kh={};c.expenses.forEach(x=>{kh[x.khat]=(kh[x.khat]||0)+x.amount});
+  const names=Object.keys(kh);
+  const ex=names.length?`<div class="grp"><h3><span>খরচ — খাত অনুযায়ী</span></h3><table><thead><tr><th>খাত</th><th class="n">টাকা</th></tr></thead><tbody>${names.map(k=>`<tr><td>${esc(k)}</td><td class="n">${money(kh[k])}</td></tr>`).join("")}<tr style="font-weight:700"><td>মোট</td><td class="n">${money(names.reduce((a,k)=>a+kh[k],0))}</td></tr></tbody></table></div>`:`<div class="empty">এখনো কোনো খরচ নেই</div>`;
+
+  const {i,o}=totals();
+  $("summaryBody").innerHTML=dep+ex+`<div class="sumbox"><div><span>মোট জমা</span><span>${money(i)} টাকা</span></div><div><span>মোট খরচ</span><span>${money(o)} টাকা</span></div><div class="sb-bal"><span>অবশিষ্ট</span><span>${money(i-o)} টাকা</span></div></div>`;
+}
+
+/* ---------- খুঁজুন ---------- */
+function runSearch(){
+  const q=$("qIn").value.trim().toLowerCase(),box=$("searchBody");
+  if(!q){box.innerHTML=`<div class="empty">ছাত্রের নাম বা নোটের কিছু অংশ লিখুন</div>`;return}
+  const res=[];
+  Object.keys(S.data).forEach(k=>{
+    const p=k.lastIndexOf("|"),ex=k.slice(0,p),yr=k.slice(p+1);
+    S.data[k].deposits.forEach(x=>{if(((x.name||"")+" "+(x.note||"")).toLowerCase().includes(q))res.push({ex,yr,x})});
+  });
+  res.sort((a,b)=>(Number(b.yr)-Number(a.yr))||b.x.date.localeCompare(a.x.date));
+  if(!res.length){box.innerHTML=`<div class="empty">কিছু পাওয়া যায়নি</div>`;return}
+  const sum=res.reduce((a,r)=>a+r.x.amount,0);
+  box.innerHTML=`<div class="grp"><table><thead><tr><th>পরীক্ষা</th><th>জামাত</th><th>ছাত্র / নোট</th><th class="n">টাকা</th></tr></thead><tbody>`+
+    res.map(r=>`<tr><td>${esc(r.ex)}<div class="sub">${bn(r.yr)} · ${fmtDate(r.x.date)}</div></td><td>${esc(r.x.jamat)}</td><td>${depWho(r.x)}</td><td class="n">${money(r.x.amount)}</td></tr>`).join("")+
+    `</tbody></table></div><div class="tot"><span>${bn(res.length)}টি এন্ট্রি</span><span>${money(sum)} টাকা</span></div>`;
+}
+
+/* ---------- ফী নির্ধারণ ---------- */
+/* ---------- জামাত ও ফী ---------- */
+function renderFees(){
+  const last=S.jamats.length-1;
+  $("feeRows").innerHTML=S.jamats.map((j,i)=>`<div class="frow" data-i="${i}"><input type="text" class="fn" value="${esc(j.name)}" aria-label="জামাতের নাম"><input type="text" class="ff" inputmode="numeric" value="${bn(j.fee)}" aria-label="ফী"><button class="sec sm" onclick="moveJ(${i},-1)" ${i===0?"disabled":""}>↑</button><button class="sec sm" onclick="moveJ(${i},1)" ${i===last?"disabled":""}>↓</button><button class="danger sm" onclick="delJ(${i})">মুছুন</button></div>`).join("");
+}
+function refreshJamatSelect(){initJamatSelect();syncDepForm(!editing)}
+function afterJamatChange(){save();renderFees();refreshJamatSelect();refreshViews()}
+const cleanName=v=>v.trim().replace(/\s+/g," ");
+function readFeeForm(){
+  const out=[],seen=new Set();
+  for(const r of document.querySelectorAll("#feeRows .frow")){
+    const name=cleanName(r.querySelector(".fn").value),fee=parseAmt(r.querySelector(".ff").value);
+    if(!name){toast("জামাতের নাম খালি রাখা যাবে না");return null}
+    if(!fee){toast("সব জামাতের সঠিক ফী লিখুন");return null}
+    if(seen.has(name)){toast("একই নামে দুটি জামাত হবে না: "+name);return null}
+    seen.add(name);
+    out.push({name,fee,old:S.jamats[Number(r.dataset.i)].name});
+  }
+  return out;
+}
+function applyFeeForm(){
+  const out=readFeeForm();if(!out)return false;
+  const ren={};out.forEach(o=>{if(o.old!==o.name)ren[o.old]=o.name});
+  if(Object.keys(ren).length){
+    Object.values(S.data).forEach(d=>d.deposits.forEach(x=>{if(Object.prototype.hasOwnProperty.call(ren,x.jamat))x.jamat=ren[x.jamat]}));
+  }
+  S.jamats=out.map(o=>({name:o.name,fee:o.fee}));
+  save();return true;
+}
+function moveJ(i,dir){
+  if(!applyFeeForm())return;
+  const j=i+dir;if(j<0||j>=S.jamats.length)return;
+  [S.jamats[i],S.jamats[j]]=[S.jamats[j],S.jamats[i]];
+  afterJamatChange();
+}
+function delJ(i){
+  if(!applyFeeForm())return;
+  if(S.jamats.length<=1){toast("অন্তত একটি জামাত থাকতে হবে");return}
+  const name=S.jamats[i].name;
+  if(Object.values(S.data).some(d=>d.deposits.some(x=>x.jamat===name))){toast("এই জামাতে জমা আছে, তাই মোছা যাবে না");return}
+  if(!confirm("\""+name+"\" জামাতটি মুছবেন?"))return;
+  S.jamats.splice(i,1);
+  afterJamatChange();toast("জামাত মোছা হয়েছে");
+}
+function addJ(){
+  if(!applyFeeForm())return;
+  const name=cleanName($("nJamat").value),fee=parseAmt($("nFee").value);
+  if(!name){toast("জামাতের নাম লিখুন");return}
+  if(!fee){toast("ফী লিখুন");return}
+  if(S.jamats.some(j=>j.name===name)){toast("এই নামে জামাত আগে থেকেই আছে");return}
+  S.jamats.push({name,fee});
+  $("nJamat").value="";$("nFee").value="";
+  afterJamatChange();toast("জামাত যোগ হয়েছে");
+}
+$("feeSave").onclick=()=>{if(applyFeeForm()){afterJamatChange();toast("সংরক্ষণ হয়েছে")}};
+$("nAdd").onclick=addJ;
+
+/* ---------- PDF ---------- */
+function pdfSave(){
+  const old=document.title;
+  const names={depList:"জমার তালিকা",expList:"খরচের তালিকা",summary:"সারসংক্ষেপ"};
+  document.title=(names[tab]||"হিসাব")+" - "+S.sel.exam+" "+bn(S.sel.year);
+  const restore=()=>{document.title=old;window.removeEventListener("afterprint",restore)};
+  window.addEventListener("afterprint",restore);
+  setTimeout(restore,30000);
+  window.print();
+}
+
+/* ---------- ট্যাব ---------- */
+const TITLES={depList:"জমার তালিকা",expList:"খরচের তালিকা",summary:"জমা-খরচের সারসংক্ষেপ"};
+function showTab(t){
+  tab=t;
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+t));
+  $("printMeta").innerHTML=`<b>${esc(S.sel.exam)} — ${bn(S.sel.year)}</b><br>${TITLES[t]||""}<br><small>তারিখ: ${fmtDate(today())}</small>`;
+  if(t==="search")runSearch();
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{showTab(b.dataset.t)});
+
+function refreshViews(){renderStats();renderLists();renderSummary();renderKhatList()}
+function renderAll(){
+  renderSetup();
+  const ready=S.sel.done&&S.sel.exam;
+  $("main").style.display=ready?"block":"none";
+  if(ready){refreshViews();renderFees();refreshJamatSelect();showTab(tab)}
+}
+
+/* ---------- ব্যাকআপ ---------- */
+$("bkExport").onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="pariksha-fee-backup-"+today()+".json";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$("bkImportBtn").onclick=()=>$("bkFile").click();
+$("bkFile").onchange=ev=>{
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d||!d.sel||!d.data)throw 0;
+      if(!confirm("বর্তমান সব তথ্য ব্যাকআপ ফাইলের তথ্য দিয়ে প্রতিস্থাপিত হবে। এগিয়ে যাবেন?"))return;
+      S=migrate(d);save();cancelEdit();renderAll();toast("ব্যাকআপ আনা হয়েছে");
+    }catch(e){alert("ফাইলটি সঠিক ব্যাকআপ ফাইল নয়")}
+  };
+  r.readAsText(f);ev.target.value="";
+};
+
+/* ---------- ইভেন্ট ---------- */
+$("dJamat").onchange=()=>syncDepForm(!editing);
+document.querySelectorAll("input[name=mode]").forEach(r=>r.onchange=()=>syncDepForm(!editing));
+$("dCount").oninput=()=>syncDepForm(true);
+$("qIn").oninput=runSearch;
+$("dSave").onclick=saveDeposit;$("eSave").onclick=saveExpense;
+$("dCancel").onclick=cancelEdit;$("eCancel").onclick=cancelEdit;
+[["nJamat","nFee"],["nFee","nAdd"],["dName","dAmt"],["dCount","dAmt"],["dAmt","dNote"],["dNote","dSave"],["eKhat","eAmt"],["eAmt","eNote"],["eNote","eSave"]].forEach(([a,b])=>$(a).addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();(b.endsWith("Save")||b==="nAdd")?$(b).click():$(b).focus()}}));
+
+initJamatSelect();
+$("dDate").value=$("eDate").value=today();
+syncDepForm(true);
+renderAll();
+</script>
+</body>
+</html>
